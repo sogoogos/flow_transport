@@ -3,13 +3,12 @@ from scipy.sparse import isspmatrix_csr
 from scipy.sparse.linalg import spsolve
 
 
-# TODO sparse matrix as type hist
-def solve_linear_boundary_value_problem(L: isspmatrix_csr, fs: np.ndarray, B: isspmatrix_csr, g: np.ndarray,
-                                        N: isspmatrix_csr) -> np.ndarray:
+def solve_linear_boundary_value_problem(L, fs: np.ndarray, B, g: np.ndarray,
+                                        N) -> np.ndarray:
     """
-    Compute the numerical_solution u of the linear differential problem:
+    Compute the numerical solution u of the linear differential problem:
     Lu = f
-    with BC:
+    with boundary condition:
     Bu=g
     @param L: matrix representing the discretized linear operator of size N by N, where N is the number of degrees of freedom
     @param fs: column vector representing the discretized r.h.s. and contributions due non-homogeneous Neumann BCs of size N by 1

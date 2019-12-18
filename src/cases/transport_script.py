@@ -12,15 +12,13 @@ if __name__ == '__main__':
     length_y = 4
     dh = 15  # m
     phi = 0.25
-    nx = 30
-    ny = 30
-    tmax = 0.125
-    nt = 30
-    dt = tmax / nt
+    nx = 20
+    ny = 20
 
     grid = StaggeredGrid(size=[length_x, length_y], dimensions=[nx, ny])
 
     # Permeability, Assume Gaussian distribution of log(K)
+    # TODO check if this is working correctly
     K = np.exp(np.random.normal(loc=1, scale=0.1, size=grid.n_cell_dofs_total))
     K = np.reshape(K, grid.n_cell_dofs[::-1])
     Kd = op.compute_mean(K, -1, grid)
@@ -39,8 +37,7 @@ if __name__ == '__main__':
     g[:grid.n_cell_dofs[1]] = 1.
 
     # Discrete Laplace operator
-    # length = -D * Kd * G
-    L = -D * G
+    L = -D * Kd * G
     fs = np.zeros(grid.n_cell_dofs_total)
 
     B, N, fn = op.build_boundary_operators(grid, param, I)
@@ -48,8 +45,6 @@ if __name__ == '__main__':
     solution = solve_linear_boundary_value_problem(L, fs + fn, B, g, N)
     # numerical_solution = numerical_solution.reshape(grid.n_cell_dofs)[::-1]
     solution = solution.reshape(grid.n_cell_dofs).transpose()
-
-    x, y = np.meshgrid(grid.loc_cell_x, grid.loc_cell_y)
 
     plt.imshow(solution, origin='lower')
     plt.colorbar()

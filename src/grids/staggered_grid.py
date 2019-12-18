@@ -6,7 +6,7 @@ import numpy as np
 class StaggeredGrid:
     def __init__(self, size: List, dimensions: List):
         """
-        Store all pertinent information about the grid
+        Store all pertinent information about the grid.
          @param size: size of computational domain entered as (dim by 1) float vector
          @param dimensions: dimensions of model entered as (dim by 1) integer vector
         """
@@ -34,7 +34,7 @@ class StaggeredGrid:
         # Assign indices of cell center and face (flux_bc) dofs
         self.idx_dofs = np.arange(self.n_cell_dofs_total)
 
-        # TODO anyway to write this simple way?
+        # TODO anyways to write this simple way?
         if dimensions[0] > 1:
             self.idx_cell_dofs_xmin = np.arange(start=0, stop=dimensions[1], step=1)
             self.idx_cell_dofs_xmax = np.arange(start=self.n_cell_dofs_total - dimensions[1],

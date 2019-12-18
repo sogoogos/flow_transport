@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.sparse import diags, spdiags, eye, kron, hstack, csr_matrix, isspmatrix_csr
 
-from parameters.parameters import Parameters
 from grids.staggered_grid import StaggeredGrid
+from parameters.parameters import Parameters
 
 
 class Operators:
@@ -41,21 +41,18 @@ class Operators:
         else:
             ValueError("Cannot solve one grid problem.")
 
-        # TODO anyway to manipulate this in sparse format?
-        G = -D.transpose().toarray()
-
+        G = -D.transpose()
         # this makes index float somehow
         dof_flux_bnd = np.concatenate([grid.idx_flux_dofs_xmin, grid.idx_flux_dofs_xmax, grid.idx_flux_dofs_ymin,
-                                      grid.idx_flux_dofs_ymax])
-        # remove boundary term
+                                       grid.idx_flux_dofs_ymax])
+        # remove boundary terms
         G[dof_flux_bnd.astype(int), :] = 0
-        G = csr_matrix(G)
         I = eye(grid.n_cell_dofs_total, format="csr")
         return D, G, I
 
     @staticmethod
     # TODO I is sparse matrix
-    def build_boundary_operators(grid: StaggeredGrid, param: Parameters, I: isspmatrix_csr):
+    def build_boundary_operators(grid: StaggeredGrid, param: Parameters, I):
         """
         This function computes the operators and r.h.s vectors for both Dirichlet and Neumann boundary conditions.
         @param grid: structure containing all pertinent information about the grid
@@ -65,12 +62,13 @@ class Operators:
                  N: N by (N-Nc) matrix of the null space of B
                  fn: N by 1 r.h.s. vector of Neumann contributions
         """
-        # TODO anyways to manipulate this without converting sparse to full matrix?
-        I = I.toarray()
+
         B = I[param.dof_dirichlet, :]
-        N = np.delete(arr=I, obj=param.dof_dirichlet, axis=1)
+        mask = np.ones(grid.n_cell_dofs_total, dtype=bool)
+        mask[param.dof_dirichlet] = False
+        N = I[:, mask]
         fn = np.zeros(grid.n_cell_dofs_total)
-        if param.qb.size > 0 or param.qb is not None:
+        if param.qb.size > 0:
             dxy = grid.volume[param.dof_neumann] / grid.area[param.dof_neumann_face]
             fn[param.dof_neumann] = param.qb / dxy
         return csr_matrix(B), csr_matrix(N), fn
