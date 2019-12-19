@@ -97,13 +97,14 @@ class Operators:
                 idx = 0 if grid.n_cell_dofs[0] == grid.n_cell_dofs_total else 1
                 mean = np.zeros(grid.n_cell_dofs[idx] + 1)
                 mean[1:-1] = compute_mean(k[:-1], k[1:])
-                return diags(diagonals=[mean], offsets=[0], shape=(grid.n_cell_dofs[idx] + 1, grid.n_cell_dofs[idx] + 1))
+                return diags(diagonals=[mean], offsets=[0],
+                             shape=(grid.n_cell_dofs[idx] + 1, grid.n_cell_dofs[idx] + 1))
             elif grid.is_problem_2d():
-                mean_x = np.zeros((grid.n_cell_dofs[1], grid.n_cell_dofs[0] + 1))
-                mean_x[:, 1:-1] = compute_mean(k[:, :-1], k[:, 1:])
+                mean_x = np.zeros((grid.n_cell_dofs[0] + 1, grid.n_cell_dofs[1]))
+                mean_x[1:-1, :] = compute_mean(k[:-1, :], k[1:, :])
 
-                mean_y = np.zeros((grid.n_cell_dofs[1] + 1, grid.n_cell_dofs[0]))
-                mean_y[1:-1, :] = compute_mean(k[:-1, :], k[1:, :])
+                mean_y = np.zeros((grid.n_cell_dofs[0], grid.n_cell_dofs[1] + 1))
+                mean_y[:, 1:-1] = compute_mean(k[:, :-1], k[:, 1:])
 
                 mean = np.hstack([mean_x.flatten(), mean_y.flatten()])
                 return diags(diagonals=mean, offsets=0, shape=(grid.n_flux_dofs_total, grid.n_flux_dofs_total))
