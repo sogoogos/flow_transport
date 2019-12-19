@@ -67,3 +67,9 @@ class StaggeredGrid:
         self.area = np.zeros(self.n_flux_dofs_total)
         self.area[:self.n_flux_dofs[0]] = np.repeat(a=self.grid_size[1], repeats=self.n_flux_dofs[0])
         self.area[self.n_flux_dofs[0]:] = np.repeat(a=self.grid_size[0], repeats=self.n_flux_dofs[1])
+
+    def is_problem_1d(self):
+        return self.n_cell_dofs[0] == self.n_cell_dofs_total or self.n_cell_dofs[1] == self.n_cell_dofs_total
+
+    def is_problem_2d(self):
+        return self.n_cell_dofs[0] < self.n_cell_dofs_total or self.n_cell_dofs[1] < self.n_cell_dofs_total

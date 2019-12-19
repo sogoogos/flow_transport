@@ -1,5 +1,7 @@
+from typing import List
+
 import numpy as np
-from scipy.sparse import diags, spdiags, eye, kron, hstack, csr_matrix, isspmatrix_csr
+from scipy.sparse import diags, eye, kron, hstack, csr_matrix
 
 from grids.staggered_grid import StaggeredGrid
 from parameters.parameters import Parameters
@@ -74,11 +76,11 @@ class Operators:
         return csr_matrix(B), csr_matrix(N), fn
 
     @staticmethod
-    def compute_mean(K: np.ndarray, power: int, grid: StaggeredGrid):
+    def compute_mean(k: List, power: int, grid: StaggeredGrid):
         """
         Takes coefficient field, k, defined at the cell centers and computes the
         mean specified by the power and returns it in a sparse diagonal matrix, Kd.
-        @param K:  Ny by Nx column vector of cell centered values
+        @param k:  Ny by Nx column vector of cell centered values
         @param power: power of the generalized mean
                 1 (arithmetic mean)
                 -1 (harmonic mean)
@@ -86,26 +88,25 @@ class Operators:
         @return: Nf by Nf diagonal matrix of power means at the cell faces.
         """
 
-        def mean(left, right):
-            return np.power(np.power(0.5 * left, power) + np.power(0.5 * right, power), 1. / power)
+        def compute_mean(left, right):
+            return np.power(0.5 * (np.power(left, power) + np.power(right, power)), power)
 
+        k = np.asarray(k, dtype=np.float64)
         if power == -1 or power == 1:
-            if grid.n_cell_dofs[0] == grid.n_cell_dofs_total or grid.n_cell_dofs[1] == grid.n_cell_dofs_total:
-                # 1D
-                mean = np.zeros(grid.n_cell_dofs[0] + 1)
-                mean[1:-1] = mean(K[:-1], K[1:])
-                return spdiags(data=mean, diags=0, m=grid.n_cell_dofs[0] + 1, n=grid.n_cell_dofs[0] + 1)
-            elif grid.n_cell_dofs[0] < grid.n_cell_dofs_total or grid.n_cell_dofs[1] < grid.n_cell_dofs_total:
-                # 2D
+            if grid.is_problem_1d():
+                idx = 0 if grid.n_cell_dofs[0] == grid.n_cell_dofs_total else 1
+                mean = np.zeros(grid.n_cell_dofs[idx] + 1)
+                mean[1:-1] = compute_mean(k[:-1], k[1:])
+                return diags(diagonals=[mean], offsets=[0], shape=(grid.n_cell_dofs[idx] + 1, grid.n_cell_dofs[idx] + 1))
+            elif grid.is_problem_2d():
                 mean_x = np.zeros((grid.n_cell_dofs[1], grid.n_cell_dofs[0] + 1))
-                mean_x[:, 1:-1] = mean(K[:, :-1], K[:, 1:])
+                mean_x[:, 1:-1] = compute_mean(k[:, :-1], k[:, 1:])
 
                 mean_y = np.zeros((grid.n_cell_dofs[1] + 1, grid.n_cell_dofs[0]))
-                mean_y[1:-1, :] = mean(K[:-1, :], K[1:, :])
+                mean_y[1:-1, :] = compute_mean(k[:-1, :], k[1:, :])
 
                 mean = np.hstack([mean_x.flatten(), mean_y.flatten()])
-                # mean = [np.transpose(mean_x.flatten()), np.transpose(mean_y.flatten())]
-                return spdiags(data=mean, diags=[0], m=grid.n_flux_dofs_total, n=grid.n_flux_dofs_total)
+                return diags(diagonals=mean, offsets=0, shape=(grid.n_flux_dofs_total, grid.n_flux_dofs_total))
             else:
                 raise ValueError("3d coefficient field is not implemented.")
         else:
