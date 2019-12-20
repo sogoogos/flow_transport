@@ -1,7 +1,7 @@
 from typing import List
 
 import numpy as np
-from scipy.sparse import diags, eye, kron, hstack, csr_matrix
+from scipy.sparse import diags, block_diag, eye, kron, vstack, hstack, csr_matrix
 
 from grids.staggered_grid import StaggeredGrid
 from parameters.parameters import Parameters
@@ -75,6 +75,40 @@ class Operators:
         return csr_matrix(B), csr_matrix(N), fn
 
     @staticmethod
+    def compute_flux(D, Kd, G, h, fs, grid: StaggeredGrid, param: Parameters):
+        """
+        Computes the mass conservative fluxes across all boundaries from the
+        residual of the compatibility condition over the boundary cells.
+        @param D:  N by Nf discrete divergence matrix
+        @param Kd: Nf by Nf conductivity matrix
+        @param G: Nf by N discrete gradient matrix
+        @param h: N by 1 vector of flow potential in cell centers
+        @param fs: N by 1 right hand side vector containing only source terms
+        @param grid: structure containing grid information
+        @param param: structure containing problem parameters and information about BCs
+        @return: fluxes
+        """
+        q = -Kd * G * h
+
+        if param.dof_dirichlet.size > 0:
+            if grid.is_problem_1d() or grid.is_problem_2d():
+                # Use mass balance to in boundary cells to attain exact flux
+                q[param.dof_dirichlet_face] = (D[param.dof_dirichlet, :] * q - fs[param.dof_dirichlet]) * \
+                                              grid.volume[param.dof_dirichlet] / grid.area[param.dof_dirichlet_face]
+                q[grid.idx_flux_dofs_xmax] *= -1.
+                q[grid.idx_flux_dofs_ymax] *= -1.
+            else:
+                raise ValueError("3d is not implemented.")
+
+        if param.dof_neumann.size > 0:
+            q[param.dof_neumann_face] = param.qb
+        return q
+
+    @staticmethod
+    def compute_stream_function(q: np.asarray, grid: StaggeredGrid):
+        sayso = 1
+
+    @staticmethod
     def compute_mean(k: List, power: int, grid: StaggeredGrid):
         """
         Takes coefficient field, k, defined at the cell centers and computes the
@@ -112,3 +146,34 @@ class Operators:
                 raise ValueError("3d coefficient field is not implemented.")
         else:
             raise ValueError("Power has to be either 1 or -1")
+
+    @staticmethod
+    def flux_upwind(q, grid: StaggeredGrid):
+        """
+        This function computes the upwind flux matrix from the flux vector.
+        @param q: Nf by 1 flux vector from the flow problem
+        @param grid: structure containing all pertinent information about the grid
+        @return: Nf by N matrix containing the upwinded fluxes
+        """
+        if grid.is_problem_1d():
+            idx = 0 if grid.n_cell_dofs[0] == grid.n_cell_dofs_total else 1
+            qn = np.minimum(q[:grid.n_cell_dofs[idx]], 0)
+            qp = np.maximum(q[1:], 0)
+            return diags(diagonals=[qp, qn], offsets=[-1, 0], shape=(grid.n_cell_dofs[idx] + 1, grid.n_cell_dofs[idx]))
+        elif grid.is_problem_2d():
+            qn_x = np.minimum(q[:grid.n_flux_dofs[0] - grid.n_cell_dofs[1]], 0)
+            qp_x = np.maximum(q[grid.n_cell_dofs[1]:grid.n_flux_dofs[0]], 0)
+            offsets = [-grid.n_cell_dofs[1], 0]
+            A_x = diags(diagonals=[qp_x, qn_x], offsets=offsets,
+                        shape=(grid.n_flux_dofs[0], grid.n_flux_dofs[0] - grid.n_cell_dofs[1]))
+            A_y = []
+            for i in range(grid.n_cell_dofs[0]):
+                step = grid.n_flux_dofs[0] + i * (grid.n_cell_dofs[1] + 1)
+                qn_y = np.minimum(q[step:step + grid.n_cell_dofs[1]], 0)
+                qp_y = np.maximum(q[step + 1:step + grid.n_cell_dofs[1] + 1], 0)
+                A_y.append(diags(diagonals=[qp_y, qn_y], offsets=[-1, 0],
+                                 shape=(grid.n_cell_dofs[1] + 1, grid.n_cell_dofs[1])))
+            A_y = block_diag(mats=tuple(A_y), format='csr')
+            return vstack([A_x, A_y], format='csr')
+        else:
+            raise ValueError("3d flux is not implemented.")
