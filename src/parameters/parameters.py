@@ -8,7 +8,7 @@ class Parameters:
     def __init__(self, dir_cell: List = None, neu_cell: List = None, dir_flux: List = None, neu_flux: List = None,
                  flux_bc: List = None):
         """
-        Store all information about the physical problem
+        Store all information about the physical problem including parameters and BCs
         @param dir_cell: indices of cell dofs where Dirichlet bc is assigned
         @param neu_cell: indices of cell dofs where Neumann bc is assigned
         @param dir_flux: indices of flux dofs where Dirichlet bc is assigned

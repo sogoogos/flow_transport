@@ -20,9 +20,9 @@ class Operators:
         ex = np.ones(grid.n_cell_dofs[0])
         ey = np.ones(grid.n_cell_dofs[1])
 
-        # nx by nx+1 discrete div matrix
+        # nx by nx+1 discrete divergence matrix
         diagonals = np.array([0, 1])
-        div_x = 1. / grid.grid_size[0] * diags(diagonals=np.array([-ex, ex]), offsets=diagonals,
+        div_x = 1. / grid.grid_size[0] * diags(diagonals=[-ex, ex], offsets=diagonals,
                                                shape=(grid.n_cell_dofs[0], grid.n_cell_dofs[0] + 1))
         div_y = 1. / grid.grid_size[1] * diags(diagonals=[-ey, ey], offsets=diagonals,
                                                shape=(grid.n_cell_dofs[1], grid.n_cell_dofs[1] + 1))
@@ -31,8 +31,8 @@ class Operators:
         iy = eye(grid.n_cell_dofs[1])
 
         # kron: kronecker product of sparse matrices A and B
-        div_x = kron(A=div_x, B=iy)
-        div_y = kron(A=ix, B=div_y)
+        div_x = kron(A=div_x, B=iy, format='csr')
+        div_y = kron(A=ix, B=div_y, format='csr')
 
         if grid.n_cell_dofs[0] > 1 and grid.n_cell_dofs[1] > 1:
             D = hstack([div_x, div_y], format="csr")
@@ -53,12 +53,11 @@ class Operators:
         return D, G, I
 
     @staticmethod
-    # TODO I is sparse matrix
     def build_boundary_operators(grid: StaggeredGrid, param: Parameters, I):
         """
         This function computes the operators and r.h.s vectors for both Dirichlet and Neumann boundary conditions.
         @param grid: structure containing all pertinent information about the grid
-        @param param: structure containing all information about the physical problem
+        @param param: structure containing problem parameters and information about BCs
         @param I: N by N identity matrix
         @return: B: Nc by N matrix of the Dirichlet constraints
                  N: N by (N-Nc) matrix of the null space of B
@@ -96,6 +95,7 @@ class Operators:
             if grid.is_problem_1d():
                 idx = 0 if grid.n_cell_dofs[0] == grid.n_cell_dofs_total else 1
                 mean = np.zeros(grid.n_cell_dofs[idx] + 1)
+                k = k.flatten()
                 mean[1:-1] = compute_mean(k[:-1], k[1:])
                 return diags(diagonals=[mean], offsets=[0],
                              shape=(grid.n_cell_dofs[idx] + 1, grid.n_cell_dofs[idx] + 1))
