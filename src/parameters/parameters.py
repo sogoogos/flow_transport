@@ -25,8 +25,8 @@ class Parameters:
             neu_flux = []
         if flux_bc is None:
             flux_bc = []
-        self.dof_dirichlet = np.hstack(dir_cell) if len(dir_cell) else []
-        self.dof_neumann = np.hstack(neu_cell) if len(neu_cell) else []
-        self.dof_dirichlet_face = np.hstack(dir_flux) if len(dir_flux) else []
-        self.dof_neumann_face = np.hstack(neu_flux) if len(neu_flux) else []
+        self.dof_dirichlet = np.hstack(dir_cell) if len(dir_cell) else np.array([])
+        self.dof_neumann = np.hstack(neu_cell) if len(neu_cell) else np.array([])
+        self.dof_dirichlet_face = np.hstack(dir_flux) if len(dir_flux) else np.array([])
+        self.dof_neumann_face = np.hstack(neu_flux) if len(neu_flux) else np.array([])
         self.qb = np.array(flux_bc)
