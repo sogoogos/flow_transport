@@ -41,8 +41,8 @@ if __name__ == '__main__':
     length_x = 1  # m
     length_y = 1
     phi = 0.25
-    nx = 155
-    ny = 155
+    nx = 150
+    ny = 150
     tmax = 0.125
     Nt = 30
     dt = tmax / Nt
@@ -73,10 +73,15 @@ if __name__ == '__main__':
                 g[:grid.n_cell_dofs[0]] = 1.
             elif i == 3:
                 g[grid.n_cell_dofs[0]:] = 1.
+            # Had to sort this because of numbering system
+            g_dict = dict(zip(np.hstack(dirichlet_cell_bc), g))
+            g = np.array([v for _, v in sorted(g_dict.items())])
 
         param = Parameters(dir_cell=dirichlet_cell_bc, dir_flux=dirichlet_flux_bc)
         B, N, fn = op.build_boundary_operators(grid, param, I)
         h = solve_linear_boundary_value_problem(L, fs + fn, B, g, N)
+
+        h_reshape = h.reshape(grid.n_cell_dofs)
 
         q = op.compute_flux(D, Kd, G, h, fs, grid, param)
         if i == 0:
@@ -103,7 +108,7 @@ if __name__ == '__main__':
             fs2 = c
             c = solve_linear_boundary_value_problem(L2, fs2 + fn, B, g, N)
 
-        c_reshape = h.reshape(grid.n_cell_dofs).transpose()
+        c_reshape = c.reshape(grid.n_cell_dofs).transpose()
 
         plt.subplot(2, 2, i + 1)
         if i == 0:
