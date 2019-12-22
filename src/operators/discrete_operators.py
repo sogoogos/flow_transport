@@ -65,15 +65,17 @@ class Operators:
                  fn: N by 1 r.h.s. vector of Neumann contributions
         """
 
-        B = I[param.dof_dirichlet, :]
+        B = I[param.unique_dof_dirichelt, :]
         mask = np.ones(grid.n_cell_dofs_total, dtype=bool)
-        if param.dof_dirichlet.size > 0:
-            mask[param.dof_dirichlet] = False
+        if param.unique_dof_dirichelt.size > 0:
+            mask[param.unique_dof_dirichelt] = False
         N = I[:, mask]
         fn = np.zeros(grid.n_cell_dofs_total)
         if param.qb.size > 0:
             dxy = grid.volume[param.dof_neumann] / grid.area[param.dof_neumann_face]
-            fn[param.dof_neumann] = param.qb / dxy
+            # Use loop here because param.dof_neumann may have duplicated indices
+            for i, j in enumerate(param.dof_neumann):
+                fn[j] += param.qb[i] / dxy[i]
         return csr_matrix(B), csr_matrix(N), fn
 
     @staticmethod
@@ -105,10 +107,6 @@ class Operators:
         if param.dof_neumann.size > 0:
             q[param.dof_neumann_face] = param.qb
         return q
-
-    @staticmethod
-    def compute_stream_function(q: np.asarray, grid: StaggeredGrid):
-        sayso = 1
 
     @staticmethod
     def compute_mean(k: List, power: int, grid: StaggeredGrid):
