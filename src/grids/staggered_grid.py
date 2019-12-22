@@ -34,7 +34,6 @@ class StaggeredGrid:
         # Assign indices of cell center and face (flux_bc) dofs
         self.idx_dofs = np.arange(self.n_cell_dofs_total)
 
-        # TODO anyways to write this simple way?
         if dimensions[0] > 1:
             self.idx_cell_dofs_xmin = np.arange(start=0, stop=dimensions[1], step=1)
             self.idx_cell_dofs_xmax = np.arange(start=self.n_cell_dofs_total - dimensions[1],
