@@ -17,6 +17,8 @@ def solve_linear_boundary_value_problem(L, fs: np.ndarray, B, g: np.ndarray,
     @return: column vector of the numerical_solution of size N by 1
     """
 
+    # TODO implement LU factorization
+    # TODO implement Cholesky factorization for SPD matrix
     hpr = spsolve(B * B.transpose(), g)
     Lr = N.transpose() * L * N
     fd = -L * B.transpose() * hpr

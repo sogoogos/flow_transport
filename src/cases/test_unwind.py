@@ -34,6 +34,7 @@ from grids.staggered_grid import StaggeredGrid
 from operators.discrete_operators import Operators as op
 from parameters.parameters import Parameters
 from solvers.solve_lbvp import solve_linear_boundary_value_problem
+from visualization.visualization_utils import Visualization
 
 if __name__ == '__main__':
     # Input parameters
@@ -45,6 +46,7 @@ if __name__ == '__main__':
     tmax = 0.125
     Nt = 30
     dt = tmax / Nt
+    vis = Visualization
 
     grid = StaggeredGrid(size=[length_x, length_y], dimensions=[nx, ny])
     D, G, I = op.build_discrete_operators(grid)
@@ -104,7 +106,6 @@ if __name__ == '__main__':
         c_reshape = h.reshape(grid.n_cell_dofs).transpose()
 
         plt.subplot(2, 2, i + 1)
-        plt.imshow(c_reshape, origin='lower')
         if i == 0:
             title = "Left to right"
         elif i == 1:
@@ -113,8 +114,5 @@ if __name__ == '__main__':
             title = "Bottom to top"
         elif i == 3:
             title = "Top to bottom"
-        plt.title(title)
-        plt.xlabel("x")
-        plt.ylabel("y")
-        plt.colorbar()
+        vis.imshow(data=c_reshape, title=title)
     plt.show()
