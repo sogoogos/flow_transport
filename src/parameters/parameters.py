@@ -30,3 +30,5 @@ class Parameters:
         self.dof_dirichlet_face = np.hstack(dir_flux) if len(dir_flux) else np.array([])
         self.dof_neumann_face = np.hstack(neu_flux) if len(neu_flux) else np.array([])
         self.qb = np.array(flux_bc)
+
+        # TODO put checking functionality ex.) error if dir center is assgined but not face

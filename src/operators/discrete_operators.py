@@ -48,6 +48,7 @@ class Operators:
         dof_flux_bnd = np.concatenate([grid.idx_flux_dofs_xmin, grid.idx_flux_dofs_xmax, grid.idx_flux_dofs_ymin,
                                        grid.idx_flux_dofs_ymax])
         # remove boundary terms
+        # TODO Changing the sparsity structure of a csc_matrix is expensive. Should use lil_matrix?
         G[dof_flux_bnd.astype(int), :] = 0
         I = eye(grid.n_cell_dofs_total, format="csr")
         return D, G, I
@@ -66,7 +67,8 @@ class Operators:
 
         B = I[param.dof_dirichlet, :]
         mask = np.ones(grid.n_cell_dofs_total, dtype=bool)
-        mask[param.dof_dirichlet] = False
+        if param.dof_dirichlet.size > 0:
+            mask[param.dof_dirichlet] = False
         N = I[:, mask]
         fn = np.zeros(grid.n_cell_dofs_total)
         if param.qb.size > 0:
