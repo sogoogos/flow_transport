@@ -1,5 +1,4 @@
 import numpy as np
-from scipy.sparse import isspmatrix_csr
 from scipy.sparse.linalg import spsolve
 
 
