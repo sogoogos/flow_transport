@@ -16,7 +16,7 @@ $$u = -k/μ ∇Φ$$
 * Transport equation: 
 $$∂(φρc)/∂t +  ∇·(cρu) = 0.$$
 
-where $\phi$: porosity,  $\rho$: fluid density,  $u$: Darcy flux,  $q$: sink/source,  $k$: permeability tensor,  $\mu$: fluid viscosity,  $\Phi$: potential,  $c$: concentration of the component.
+where  $ \phi $: porosity,  $\rho $: fluid density,  $u $: Darcy flux,  $q $: sink/source,  $k $: permeability tensor,  $\mu $: fluid viscosity,  $\Phi $: potential,  $c $: concentration of the component.
 
 
 ### Note
